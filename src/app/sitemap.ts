@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+// Query the DB at request time rather than at build time, since the
+// database may not be reachable during the build step (e.g. on first
+// deploy, before a managed DB like Netlify's has been provisioned).
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await prisma.post.findMany({
     where: { published: true },

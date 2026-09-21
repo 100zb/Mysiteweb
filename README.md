@@ -45,6 +45,12 @@ npm install
 cp .env.example .env
 ```
 
+`npm install` génère automatiquement le client Prisma (`postinstall`). Si jamais tu tombes sur une erreur `Module not found: Can't resolve '@/generated/prisma/client'`, relance-le manuellement :
+
+```bash
+npx prisma generate
+```
+
 Renseigne `.env` :
 
 ```bash

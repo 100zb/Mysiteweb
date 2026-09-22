@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
 import { registerSchema, loginSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
+import { getSiteSettings } from "@/lib/settings";
 
 export type ActionState = {
   error?: string;
@@ -26,6 +27,11 @@ export async function registerAction(
   const parsed = registerSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
+  }
+
+  const settings = await getSiteSettings();
+  if (!settings.registrationOpen) {
+    return { error: "Les inscriptions sont fermées pour le moment." };
   }
 
   const { name, email, password } = parsed.data;

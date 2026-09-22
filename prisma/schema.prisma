@@ -170,6 +170,11 @@ model Comment {
   @@index([parentId])
 }
 
+model SiteSettings {
+  id               String  @id @default("global")
+  registrationOpen Boolean @default(true)
+}
+
 model Like {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())

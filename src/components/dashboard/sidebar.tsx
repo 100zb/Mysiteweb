@@ -2,22 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, PlusCircle, UserCog } from "lucide-react";
+import { LayoutGrid, PlusCircle, UserCog, ShieldCheck } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
 
-const links = [
+const baseLinks = [
   { href: "/dashboard", label: "Mes articles", icon: LayoutGrid },
   { href: "/dashboard/new", label: "Nouvel article", icon: PlusCircle },
   { href: "/dashboard/profile", label: "Profil", icon: UserCog },
 ];
 
+const adminLink = { href: "/dashboard/admin", label: "Administration", icon: ShieldCheck };
+
 export function DashboardSidebar({
   user,
 }: {
-  user: { name?: string | null; username?: string | null; image?: string | null };
+  user: { name?: string | null; username?: string | null; image?: string | null; role?: string };
 }) {
   const pathname = usePathname();
+  const links = user.role === "ADMIN" ? [...baseLinks, adminLink] : baseLinks;
 
   return (
     <aside className="lg:w-64">

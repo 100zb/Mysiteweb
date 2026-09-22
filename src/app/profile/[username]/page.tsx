@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Mail } from "lucide-react";
+import { auth } from "@/auth";
 import { getUserByUsername, getUserPublishedPosts } from "@/lib/posts";
+import { isFollowing, areMutualFollowers } from "@/lib/social";
 import { Avatar } from "@/components/avatar";
 import { PostCard } from "@/components/post-card";
+import { FollowButton } from "@/components/profile/follow-button";
 import { FadeIn } from "@/components/motion/fade-in";
+import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 
 export async function generateMetadata({
@@ -17,10 +23,16 @@ export async function generateMetadata({
 
 export default async function ProfilePage({ params }: PageProps<"/profile/[username]">) {
   const { username } = await params;
-  const user = await getUserByUsername(username);
+  const [user, session] = await Promise.all([getUserByUsername(username), auth()]);
   if (!user) notFound();
 
-  const posts = await getUserPublishedPosts(user.id);
+  const currentUserId = session?.user.id;
+  const isOwnProfile = currentUserId === user.id;
+  const [posts, following, mutual] = await Promise.all([
+    getUserPublishedPosts(user.id),
+    currentUserId && !isOwnProfile ? isFollowing(currentUserId, user.id) : Promise.resolve(false),
+    currentUserId && !isOwnProfile ? areMutualFollowers(currentUserId, user.id) : Promise.resolve(false),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
@@ -32,6 +44,19 @@ export default async function ProfilePage({ params }: PageProps<"/profile/[usern
         <p className="mt-2 text-xs text-black/40 dark:text-white/40">
           Membre depuis {formatDate(user.createdAt)}
         </p>
+
+        {currentUserId && !isOwnProfile && (
+          <div className="mt-5 flex items-center gap-2">
+            <FollowButton targetUserId={user.id} targetUsername={user.username!} initialFollowing={following} />
+            {mutual && (
+              <Link href={`/dashboard/messages/${user.username}`}>
+                <Button variant="outline" size="sm">
+                  <Mail className="h-4 w-4" /> Message
+                </Button>
+              </Link>
+            )}
+          </div>
+        )}
 
         <div className="mt-6 flex gap-8 text-sm">
           <div className="text-center">

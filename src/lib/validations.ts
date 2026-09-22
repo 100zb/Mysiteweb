@@ -58,6 +58,10 @@ export const changePasswordSchema = z
     path: ["confirmPassword"],
   });
 
+export const messageSchema = z.object({
+  content: z.string().min(1, "Le message ne peut pas être vide").max(2000),
+});
+
 export const adminCreateUserSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères").max(60),
   username: z
@@ -78,3 +82,4 @@ export type ProfileInput = z.infer<typeof profileSchema>;
 export type AdminCreateUserInput = z.infer<typeof adminCreateUserSchema>;
 export type AccountInput = z.infer<typeof accountSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type MessageInput = z.infer<typeof messageSchema>;

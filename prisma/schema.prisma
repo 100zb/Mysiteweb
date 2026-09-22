@@ -21,6 +21,12 @@ enum CommentStatus {
   HIDDEN
 }
 
+enum NotificationType {
+  FOLLOW
+  NEW_POST
+  MESSAGE
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -43,6 +49,11 @@ model User {
 
   following Follow[] @relation("follower")
   followers Follow[] @relation("following")
+
+  notificationsReceived Notification[] @relation("notificationsReceived")
+  notificationsCaused   Notification[] @relation("notificationsCaused")
+  messagesSent          Message[]      @relation("messagesSent")
+  messagesReceived      Message[]      @relation("messagesReceived")
 
   @@index([email])
 }
@@ -142,9 +153,10 @@ model Post {
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  tags     PostTag[]
-  comments Comment[]
-  likes    Like[]
+  tags          PostTag[]
+  comments      Comment[]
+  likes         Like[]
+  notifications Notification[]
 
   @@index([authorId])
   @@index([published, publishedAt])
@@ -187,4 +199,38 @@ model Like {
 
   @@unique([postId, userId])
   @@index([postId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  userId String
+  user   User   @relation("notificationsReceived", fields: [userId], references: [id], onDelete: Cascade)
+
+  actorId String?
+  actor   User?   @relation("notificationsCaused", fields: [actorId], references: [id], onDelete: Cascade)
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  senderId String
+  sender   User   @relation("messagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+
+  recipientId String
+  recipient   User   @relation("messagesReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId, createdAt])
+  @@index([recipientId, senderId, createdAt])
 }

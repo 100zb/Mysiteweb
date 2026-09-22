@@ -8,6 +8,7 @@ import { Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar } from "@/components/avatar";
+import { NotificationsBell } from "@/components/layout/notifications-bell";
 import { signOutAction } from "@/lib/actions/sign-out";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +52,7 @@ export function NavbarClient({
         <ThemeToggle />
         {user ? (
           <div className="flex items-center gap-3">
+            <NotificationsBell />
             <Link href="/dashboard" className="flex items-center gap-2">
               <Avatar name={user.name} src={user.image} size={32} />
             </Link>
@@ -102,14 +104,15 @@ export function NavbarClient({
               <div className="my-2 h-px bg-black/5 dark:bg-white/10" />
               {user ? (
                 <>
-                  <Link
-                    href="/dashboard"
-                    className={cn(
-                      "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5"
-                    )}
-                  >
-                    <LayoutDashboard className="h-4 w-4" /> Tableau de bord
-                  </Link>
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center gap-2 text-sm font-medium hover:opacity-70"
+                    >
+                      <LayoutDashboard className="h-4 w-4" /> Tableau de bord
+                    </Link>
+                    <NotificationsBell />
+                  </div>
                   <form action={signOutAction}>
                     <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5">
                       <LogOut className="h-4 w-4" /> Se déconnecter

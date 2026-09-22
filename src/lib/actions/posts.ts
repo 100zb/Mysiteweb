@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-helpers";
 import { postSchema } from "@/lib/validations";
 import { slugify, estimateReadingTime } from "@/lib/utils";
+import { notifyNewPost } from "@/lib/notifications";
 
 export type PostActionState = {
   error?: string;
@@ -89,6 +90,7 @@ export async function createPost(
   });
 
   if (tags) await syncTags(post.id, tags);
+  if (published) await notifyNewPost(user.id, post.id);
 
   revalidatePath("/dashboard");
   revalidatePath("/blog");
@@ -113,6 +115,7 @@ export async function updatePost(
 
   const { title, excerpt, content, coverImage, categoryId, tags, published } = parsed.data;
   const slug = title !== existing.title ? await uniqueSlug(title, postId) : existing.slug;
+  const isNewlyPublished = published && !existing.publishedAt;
 
   await prisma.post.update({
     where: { id: postId },
@@ -124,12 +127,13 @@ export async function updatePost(
       coverImage: coverImage || null,
       categoryId: categoryId || null,
       published,
-      publishedAt: published && !existing.publishedAt ? new Date() : existing.publishedAt,
+      publishedAt: isNewlyPublished ? new Date() : existing.publishedAt,
       readingTime: estimateReadingTime(content),
     },
   });
 
   await syncTags(postId, tags ?? "");
+  if (isNewlyPublished) await notifyNewPost(user.id, postId);
 
   revalidatePath("/dashboard");
   revalidatePath("/blog");
@@ -157,13 +161,17 @@ export async function togglePublish(postId: string) {
     return { error: "Non autorisé" };
   }
 
+  const isNewlyPublished = !existing.published && !existing.publishedAt;
+
   await prisma.post.update({
     where: { id: postId },
     data: {
       published: !existing.published,
-      publishedAt: !existing.published && !existing.publishedAt ? new Date() : existing.publishedAt,
+      publishedAt: isNewlyPublished ? new Date() : existing.publishedAt,
     },
   });
+
+  if (isNewlyPublished) await notifyNewPost(user.id, postId);
 
   revalidatePath("/dashboard");
   revalidatePath("/blog");

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, PlusCircle, UserCog, ShieldCheck, Heart } from "lucide-react";
+import { LayoutGrid, PlusCircle, UserCog, ShieldCheck, Heart, Mail } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ const baseLinks = [
   { href: "/dashboard", label: "Mes articles", icon: LayoutGrid },
   { href: "/dashboard/new", label: "Nouvel article", icon: PlusCircle },
   { href: "/dashboard/likes", label: "Articles aimés", icon: Heart },
+  { href: "/dashboard/messages", label: "Messages", icon: Mail },
   { href: "/dashboard/profile", label: "Profil", icon: UserCog },
 ];
 
@@ -17,8 +18,10 @@ const adminLink = { href: "/dashboard/admin", label: "Administration", icon: Shi
 
 export function DashboardSidebar({
   user,
+  unreadMessages = 0,
 }: {
   user: { name?: string | null; username?: string | null; image?: string | null; role?: string };
+  unreadMessages?: number;
 }) {
   const pathname = usePathname();
   const links = user.role === "ADMIN" ? [...baseLinks, adminLink] : baseLinks;
@@ -48,6 +51,11 @@ export function DashboardSidebar({
               )}
             >
               <link.icon className="h-4 w-4" /> {link.label}
+              {link.href === "/dashboard/messages" && unreadMessages > 0 && (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-fuchsia-500 px-1.5 text-[11px] font-semibold text-white">
+                  {unreadMessages > 9 ? "9+" : unreadMessages}
+                </span>
+              )}
             </Link>
           );
         })}

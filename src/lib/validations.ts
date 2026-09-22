@@ -38,8 +38,21 @@ export const profileSchema = z.object({
   image: z.url("URL invalide").optional().or(z.literal("")),
 });
 
+export const adminCreateUserSchema = z.object({
+  name: z.string().min(2, "Le nom doit contenir au moins 2 caractères").max(60),
+  username: z
+    .string()
+    .min(3, "3 caractères minimum")
+    .max(30)
+    .regex(/^[a-z0-9_-]+$/i, "Lettres, chiffres, - et _ uniquement"),
+  email: z.email("Adresse email invalide"),
+  password: z.string().min(8, "8 caractères minimum"),
+  role: z.enum(["USER", "AUTHOR", "ADMIN"]),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PostInput = z.infer<typeof postSchema>;
 export type CommentInput = z.infer<typeof commentSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;
+export type AdminCreateUserInput = z.infer<typeof adminCreateUserSchema>;

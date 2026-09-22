@@ -22,6 +22,7 @@ const providers: NextAuthConfig["providers"] = [
 
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user?.password) return null;
+      if (user.suspended) return null;
 
       const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) return null;
@@ -51,4 +52,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers,
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt(params) {
+      const token = await authConfig.callbacks.jwt(params);
+      if (token.id) {
+        // Re-checked on every request (not just sign-in) so a suspension
+        // takes effect immediately instead of waiting for the JWT to expire.
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { suspended: true, role: true },
+        });
+        if (!dbUser || dbUser.suspended) {
+          throw new Error("AccountSuspended");
+        }
+        token.role = dbUser.role;
+      }
+      return token;
+    },
+  },
 });

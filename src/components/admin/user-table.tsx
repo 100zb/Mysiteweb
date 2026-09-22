@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { useTransition } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Ban, RotateCcw } from "lucide-react";
 import { Avatar } from "@/components/avatar";
-import { deleteUserAction, setUserRoleAction } from "@/lib/actions/admin";
+import { Badge } from "@/components/ui/badge";
+import { deleteUserAction, setUserRoleAction, setUserSuspendedAction } from "@/lib/actions/admin";
 import { formatDate, cn } from "@/lib/utils";
 
 type AdminUser = {
@@ -13,6 +14,7 @@ type AdminUser = {
   username: string | null;
   email: string | null;
   role: string;
+  suspended: boolean;
   image: string | null;
   createdAt: Date;
   _count: { posts: number; comments: number };
@@ -44,12 +46,15 @@ export function UserTable({
         </thead>
         <tbody className="divide-y divide-black/5 dark:divide-white/10">
           {users.map((user) => (
-            <tr key={user.id}>
+            <tr key={user.id} className={cn(user.suspended && "bg-red-500/5")}>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
                   <Avatar name={user.name} src={user.image} size={32} />
                   <div>
-                    <p className="font-medium">{user.name ?? "—"}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{user.name ?? "—"}</p>
+                      {user.suspended && <Badge variant="outline" className="border-red-500/40 text-red-500">Suspendu</Badge>}
+                    </div>
                     <p className="text-xs text-black/50 dark:text-white/50">
                       @{user.username ?? "?"} · {user.email}
                     </p>
@@ -84,29 +89,57 @@ export function UserTable({
               <td className="px-4 py-3 text-black/60 dark:text-white/60">
                 {formatDate(user.createdAt)}
               </td>
-              <td className="px-4 py-3 text-right">
-                <button
-                  type="button"
-                  disabled={isPending || user.id === currentUserId}
-                  onClick={() => {
-                    setError(null);
-                    if (!confirm(`Supprimer le compte de ${user.name ?? user.username} ? Cette action est irréversible.`)) {
-                      return;
+              <td className="px-4 py-3">
+                <div className="flex items-center justify-end gap-1">
+                  <button
+                    type="button"
+                    disabled={isPending || user.id === currentUserId}
+                    onClick={() => {
+                      setError(null);
+                      startTransition(async () => {
+                        const result = await setUserSuspendedAction(user.id, !user.suspended);
+                        if (result?.error) setError(result.error);
+                      });
+                    }}
+                    className={cn(
+                      "rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/5",
+                      user.suspended ? "text-emerald-500" : "text-amber-500",
+                      user.id === currentUserId && "cursor-not-allowed opacity-30"
+                    )}
+                    aria-label={user.suspended ? "Réactiver" : "Suspendre"}
+                    title={
+                      user.id === currentUserId
+                        ? "Tu ne peux pas te suspendre toi-même"
+                        : user.suspended
+                          ? "Réactiver"
+                          : "Suspendre"
                     }
-                    startTransition(async () => {
-                      const result = await deleteUserAction(user.id);
-                      if (result?.error) setError(result.error);
-                    });
-                  }}
-                  className={cn(
-                    "rounded-full p-2 text-red-500 hover:bg-red-500/10",
-                    user.id === currentUserId && "cursor-not-allowed opacity-30"
-                  )}
-                  aria-label="Supprimer"
-                  title={user.id === currentUserId ? "Tu ne peux pas te supprimer toi-même" : "Supprimer"}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                  >
+                    {user.suspended ? <RotateCcw className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPending || user.id === currentUserId}
+                    onClick={() => {
+                      setError(null);
+                      if (!confirm(`Supprimer le compte de ${user.name ?? user.username} ? Cette action est irréversible.`)) {
+                        return;
+                      }
+                      startTransition(async () => {
+                        const result = await deleteUserAction(user.id);
+                        if (result?.error) setError(result.error);
+                      });
+                    }}
+                    className={cn(
+                      "rounded-full p-2 text-red-500 hover:bg-red-500/10",
+                      user.id === currentUserId && "cursor-not-allowed opacity-30"
+                    )}
+                    aria-label="Supprimer"
+                    title={user.id === currentUserId ? "Tu ne peux pas te supprimer toi-même" : "Supprimer"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

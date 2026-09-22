@@ -38,6 +38,26 @@ export const profileSchema = z.object({
   image: z.url("URL invalide").optional().or(z.literal("")),
 });
 
+export const accountSchema = z.object({
+  username: z
+    .string()
+    .min(3, "3 caractères minimum")
+    .max(30)
+    .regex(/^[a-z0-9_-]+$/i, "Lettres, chiffres, - et _ uniquement"),
+  email: z.email("Adresse email invalide"),
+});
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Mot de passe actuel requis"),
+    newPassword: z.string().min(8, "8 caractères minimum"),
+    confirmPassword: z.string().min(1, "Confirme le nouveau mot de passe"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
+
 export const adminCreateUserSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères").max(60),
   username: z
@@ -56,3 +76,5 @@ export type PostInput = z.infer<typeof postSchema>;
 export type CommentInput = z.infer<typeof commentSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;
 export type AdminCreateUserInput = z.infer<typeof adminCreateUserSchema>;
+export type AccountInput = z.infer<typeof accountSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

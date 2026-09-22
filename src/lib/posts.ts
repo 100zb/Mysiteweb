@@ -181,3 +181,12 @@ export async function getUserPublishedPosts(userId: string) {
     orderBy: { publishedAt: "desc" },
   });
 }
+
+export async function getLikedPostsForUser(userId: string) {
+  const likes = await prisma.like.findMany({
+    where: { userId, post: { published: true } },
+    orderBy: { createdAt: "desc" },
+    select: { post: { select: postCardSelect } },
+  });
+  return likes.map((like) => like.post);
+}

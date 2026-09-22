@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, PlusCircle, UserCog, ShieldCheck } from "lucide-react";
+import { LayoutGrid, PlusCircle, UserCog, ShieldCheck, Heart } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
 
 const baseLinks = [
   { href: "/dashboard", label: "Mes articles", icon: LayoutGrid },
   { href: "/dashboard/new", label: "Nouvel article", icon: PlusCircle },
+  { href: "/dashboard/likes", label: "Articles aimés", icon: Heart },
   { href: "/dashboard/profile", label: "Profil", icon: UserCog },
 ];
 

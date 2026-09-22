@@ -20,6 +20,7 @@ export function Avatar({
         alt={name ?? "Avatar"}
         width={size}
         height={size}
+        unoptimized={src.startsWith("data:")}
         className={cn("rounded-full object-cover ring-1 ring-black/5 dark:ring-white/10", className)}
       />
     );

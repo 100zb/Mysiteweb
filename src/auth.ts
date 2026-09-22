@@ -58,15 +58,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const token = await authConfig.callbacks.jwt(params);
       if (token.id) {
         // Re-checked on every request (not just sign-in) so a suspension
-        // takes effect immediately instead of waiting for the JWT to expire.
+        // takes effect immediately instead of waiting for the JWT to expire,
+        // and so profile edits (name/photo) show up without a re-login.
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { suspended: true, role: true },
+          select: { suspended: true, role: true, name: true, image: true },
         });
         if (!dbUser || dbUser.suspended) {
           throw new Error("AccountSuspended");
         }
         token.role = dbUser.role;
+        token.name = dbUser.name;
+        token.picture = dbUser.image;
       }
       return token;
     },

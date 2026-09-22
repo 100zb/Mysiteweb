@@ -28,6 +28,10 @@ export async function updateProfile(
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
   }
 
+  if (parsed.data.image && parsed.data.image.length > 2_000_000) {
+    return { error: "L'image est trop lourde." };
+  }
+
   await prisma.user.update({
     where: { id: user.id },
     data: {
